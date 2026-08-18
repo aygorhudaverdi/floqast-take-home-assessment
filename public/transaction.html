@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Transactions</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <nav>
+    <a href="index.html">Dashboard</a>
+    <a href="register.html" data-testid="nav-register">Register User</a>
+    <a href="transaction.html" data-testid="nav-transactions">Transactions</a>
+  </nav>
+  <main>
+    <h1>Create Transaction</h1>
+    <div class="card">
+      <form id="transaction-form" data-testid="transaction-form">
+        <label for="userId">User ID</label>
+        <input id="userId" name="userId" data-testid="transaction-user-id" required />
+
+        <label for="amount">Amount</label>
+        <input id="amount" name="amount" type="number" step="0.01" data-testid="transaction-amount" required />
+
+        <label for="type">Type</label>
+        <select id="type" name="type" data-testid="transaction-type">
+          <option value="transfer">Transfer</option>
+          <option value="deposit">Deposit</option>
+          <option value="withdrawal">Withdrawal</option>
+        </select>
+
+        <label for="recipientId">Recipient ID (transfers only)</label>
+        <input id="recipientId" name="recipientId" data-testid="transaction-recipient-id" />
+
+        <button type="submit" data-testid="transaction-submit">Create Transaction</button>
+      </form>
+      <div id="transaction-message" class="message" data-testid="transaction-message"></div>
+    </div>
+
+    <h1>View Transaction History</h1>
+    <div class="card">
+      <label for="lookupUserId">User ID</label>
+      <input id="lookupUserId" data-testid="lookup-user-id" />
+      <button id="lookup-button" data-testid="lookup-submit">View Transactions</button>
+      <div id="lookup-message" class="message" data-testid="lookup-message"></div>
+      <table id="transactions-table" data-testid="transactions-table" style="display: none">
+        <thead>
+          <tr><th>Type</th><th>Amount</th><th>Recipient</th><th>Status</th><th>Created</th></tr>
+        </thead>
+        <tbody id="transactions-body" data-testid="transactions-body"></tbody>
+      </table>
+    </div>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

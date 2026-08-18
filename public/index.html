@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>FloQast Mock Fintech App</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <nav>
+    <a href="index.html">Dashboard</a>
+    <a href="register.html" data-testid="nav-register">Register User</a>
+    <a href="transaction.html" data-testid="nav-transactions">Transactions</a>
+  </nav>
+  <main>
+    <h1>Mock Fintech Microservices App</h1>
+    <div class="card">
+      <p>
+        This is a mock frontend for a hypothetical fintech system, built to serve as the
+        target under test for a QE automation framework. It talks to an API Gateway that
+        routes to independent User, Transaction, and Notification services.
+      </p>
+      <p class="hint">
+        Gateway: <code>http://localhost:4000</code> &middot;
+        Frontend: <code>http://localhost:3000</code>
+      </p>
+      <ul>
+        <li><a href="register.html">Register a new user</a></li>
+        <li><a href="transaction.html">Create a transaction / view transaction history</a></li>
+      </ul>
+    </div>
+  </main>
+</body>
+</html>

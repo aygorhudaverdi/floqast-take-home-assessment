@@ -1,0 +1,24 @@
+{
+  "name": "floqast-take-home-assessment",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Mock fintech microservices system (API Gateway, User/Transaction/Notification services) plus mock frontend, built as the target system for a QE test automation framework.",
+  "scripts": {
+    "dev": "concurrently -n gateway,user,transaction,notification,frontend -c blue,green,yellow,magenta,cyan \"npm:start:gateway\" \"npm:start:user\" \"npm:start:transaction\" \"npm:start:notification\" \"npm:start:frontend\"",
+    "start:gateway": "node services/gateway/server.js",
+    "start:user": "node services/user-service/server.js",
+    "start:transaction": "node services/transaction-service/server.js",
+    "start:notification": "node services/notification-service/server.js",
+    "start:frontend": "serve public -l 3000"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "http-proxy-middleware": "^2.0.6"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "serve": "^14.2.3"
+  }
+}
