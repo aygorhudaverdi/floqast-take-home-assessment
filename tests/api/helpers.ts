@@ -38,6 +38,17 @@ export interface ApiResult<TPayload> {
 }
 
 /**
+ * Attaches a request/response record to the current test's HTML/JSON report, so every
+ * API call a helper makes is inspectable per-test without needing a trace or a retry.
+ */
+async function logApiCall(method: string, url: string, payload: unknown, response: APIResponse, body: unknown) {
+  await test.info().attach(`${method} ${url} → ${response.status()}`, {
+    body: JSON.stringify({ request: payload, status: response.status(), response: body }, null, 2),
+    contentType: "application/json",
+  });
+}
+
+/**
  * Registers a fresh user directly against the gateway (POST /api/users) with a
  * guaranteed-unique email (unless overridden), returning the raw response, the
  * parsed created-user body, and the payload that was sent (useful for asserting
@@ -54,6 +65,7 @@ export async function createUser(
     data: payload,
   });
   const body = await response.json().catch(() => undefined);
+  await logApiCall("POST", "/api/users", payload, response, body);
   return { response, body, payload };
 }
 
@@ -69,6 +81,7 @@ export async function createTransaction(
     data: payload,
   });
   const body = await response.json().catch(() => undefined);
+  await logApiCall("POST", "/api/transactions", payload, response, body);
   return { response, body, payload };
 }
 
@@ -84,5 +97,6 @@ export async function createNotification(
     data: payload,
   });
   const body = await response.json().catch(() => undefined);
+  await logApiCall("POST", "/api/notifications", payload, response, body);
   return { response, body, payload };
 }
