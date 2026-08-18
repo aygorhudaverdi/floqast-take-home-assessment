@@ -8,10 +8,7 @@
 // specs/api-test-plan.md items 2.10/2.11 for the documented reasoning.
 
 import { randomUUID } from 'node:crypto';
-import { test, expect } from '../../fixtures';
-
-const GATEWAY_URL = 'http://localhost:4000';
-const API_KEY = 'dev-secret-key';
+import { test, expect, GATEWAY_URL, AUTH_HEADERS } from '../helpers';
 
 test.describe('2. Error Scenario Handling', () => {
   test('2.9 Transaction creation for a nonexistent userId returns a clean 404 before any limit/type checks matter', async ({
@@ -21,10 +18,7 @@ test.describe('2. Error Scenario Handling', () => {
 
     // 2. POST /api/transactions with a syntactically valid but never-registered userId, a valid amount, and type='deposit'
     const response = await request.post(`${GATEWAY_URL}/api/transactions`, {
-      headers: {
-        'x-api-key': API_KEY,
-        'Content-Type': 'application/json',
-      },
+      headers: AUTH_HEADERS,
       data: {
         userId: neverRegisteredUserId,
         amount: 100,
@@ -34,9 +28,7 @@ test.describe('2. Error Scenario Handling', () => {
 
     // expect: Response status 404 with body {error:'NotFound', message:'user not found'} (verified live) —
     // no transaction is recorded (the response body carries no transaction id/fields at all)
-    expect(response.status()).toBe(404);
-    const body = await response.json();
-    expect(body).toEqual({ error: 'NotFound', message: 'user not found' });
-    expect(body).not.toHaveProperty('id');
+    await expect(response).toBeNotFoundError('user not found');
+    expect(await response.json()).not.toHaveProperty('id');
   });
 });

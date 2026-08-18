@@ -53,8 +53,7 @@ test.describe('1. CRUD Operations Testing', () => {
       `${GATEWAY_URL}/api/users/00000000-0000-0000-0000-000000000000`,
       { headers: AUTH_HEADERS }
     );
-    expect(response.status()).toBe(404);
-    expect(await response.json()).toEqual({ error: 'NotFound', message: 'user not found' });
+    await expect(response).toBeNotFoundError('user not found');
   });
 
   test('1.4 Read a user with a non-UUID-shaped id string', async ({ request }) => {
@@ -62,7 +61,6 @@ test.describe('1. CRUD Operations Testing', () => {
     const response = await request.get(`${GATEWAY_URL}/api/users/not-a-real-id-123`, {
       headers: AUTH_HEADERS,
     });
-    expect(response.status()).toBe(404);
-    expect(await response.json()).toEqual({ error: 'NotFound', message: 'user not found' });
+    await expect(response).toBeNotFoundError('user not found');
   });
 });

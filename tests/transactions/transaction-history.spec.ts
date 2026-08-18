@@ -2,6 +2,7 @@
 // seed: tests/seed.spec.ts
 
 import { test, expect } from '../fixtures';
+import { uniqueEmail } from '../support/factories';
 
 test.describe('Transaction History Lookup (transaction.html — lookup section)', () => {
   test('Happy path — lookup a user with existing transactions', async ({ registerPage, transactionPage }) => {
@@ -9,7 +10,7 @@ test.describe('Transaction History Lookup (transaction.html — lookup section)'
     await registerPage.goto();
     await registerPage.register({
       name: 'History Happy Path',
-      email: `history.happy.${Date.now()}@example.com`,
+      email: uniqueEmail('history.happy'),
       accountType: 'basic',
     });
     const userId = await registerPage.getCreatedUserId();
@@ -39,7 +40,7 @@ test.describe('Transaction History Lookup (transaction.html — lookup section)'
     await registerPage.goto();
     await registerPage.register({
       name: 'History Zero Tx',
-      email: `history.zero.${Date.now()}@example.com`,
+      email: uniqueEmail('history.zero'),
       accountType: 'basic',
     });
     const userId = await registerPage.getCreatedUserId();
@@ -103,7 +104,7 @@ test.describe('Transaction History Lookup (transaction.html — lookup section)'
     await registerPage.goto();
     await registerPage.register({
       name: 'History Reset Check',
-      email: `history.reset.${Date.now()}@example.com`,
+      email: uniqueEmail('history.reset'),
       accountType: 'basic',
     });
     const userId = await registerPage.getCreatedUserId();
@@ -131,7 +132,7 @@ test.describe('Transaction History Lookup (transaction.html — lookup section)'
     await registerPage.goto();
     await registerPage.register({
       name: 'History Multi Tx',
-      email: `history.multi.${Date.now()}@example.com`,
+      email: uniqueEmail('history.multi'),
       accountType: 'basic',
     });
     const userId = await registerPage.getCreatedUserId();
@@ -170,7 +171,7 @@ test.describe('Transaction History Lookup (transaction.html — lookup section)'
     await registerPage.goto();
     await registerPage.register({
       name: 'History Currency Fmt',
-      email: `history.currency.${Date.now()}@example.com`,
+      email: uniqueEmail('history.currency'),
       accountType: 'basic',
     });
     const userId = await registerPage.getCreatedUserId();
@@ -197,7 +198,7 @@ test.describe('Transaction History Lookup (transaction.html — lookup section)'
     await registerPage.goto();
     await registerPage.register({
       name: 'History Recipient Col',
-      email: `history.recipient.${Date.now()}@example.com`,
+      email: uniqueEmail('history.recipient'),
       accountType: 'basic',
     });
     const userId = await registerPage.getCreatedUserId();

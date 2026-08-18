@@ -1,10 +1,7 @@
 // spec: specs/api-test-plan.md
 // seed: tests/seed.spec.ts
 
-import { test, expect } from '../../fixtures';
-
-const GATEWAY_URL = 'http://localhost:4000';
-const API_KEY = 'dev-secret-key';
+import { test, expect, GATEWAY_URL, AUTH_HEADERS } from '../helpers';
 
 test.describe('2. Error Scenario Handling', () => {
   test('2.1 Malformed JSON body returns 400 with an HTML stack-trace body (documented info-disclosure smell)', async ({
@@ -12,10 +9,7 @@ test.describe('2. Error Scenario Handling', () => {
   }) => {
     // 2. POST /api/users with Content-Type: application/json and a syntactically invalid JSON body (e.g. '{ name: "bad json", email: ')
     const response = await request.post(`${GATEWAY_URL}/api/users`, {
-      headers: {
-        'x-api-key': API_KEY,
-        'Content-Type': 'application/json',
-      },
+      headers: AUTH_HEADERS,
       data: '{ name: "bad json", email: ',
     });
 
@@ -35,10 +29,7 @@ test.describe('2. Error Scenario Handling', () => {
   }) => {
     // 2. POST /api/users with Content-Type: application/json and body = '' (zero-length)
     const response = await request.post(`${GATEWAY_URL}/api/users`, {
-      headers: {
-        'x-api-key': API_KEY,
-        'Content-Type': 'application/json',
-      },
+      headers: AUTH_HEADERS,
       data: '',
     });
 
@@ -59,32 +50,22 @@ test.describe('2. Error Scenario Handling', () => {
       accountType: 'basic',
     });
     const response = await request.post(`${GATEWAY_URL}/api/users`, {
-      headers: {
-        'x-api-key': API_KEY,
-        'Content-Type': 'text/plain',
-      },
+      headers: { ...AUTH_HEADERS, 'Content-Type': 'text/plain' },
       data: validPayload,
     });
 
     // expect: Response status 400 with clean JSON body {error:'ValidationError', message:'name is required'}
     // (NOT a parser error, and NOT treated as if name/email were actually present)
-    expect(response.status()).toBe(400);
-    expect(await response.json()).toEqual({ error: 'ValidationError', message: 'name is required' });
+    await expect(response).toBeValidationError('name is required');
 
     // 3. Repeat with no Content-Type header at all
     const responseNoContentType = await request.post(`${GATEWAY_URL}/api/users`, {
-      headers: {
-        'x-api-key': API_KEY,
-      },
+      headers: { 'x-api-key': AUTH_HEADERS['x-api-key'] },
       data: validPayload,
     });
 
     // expect: Same clean 'name is required' 400 JSON response (verified live)
-    expect(responseNoContentType.status()).toBe(400);
-    expect(await responseNoContentType.json()).toEqual({
-      error: 'ValidationError',
-      message: 'name is required',
-    });
+    await expect(responseNoContentType).toBeValidationError('name is required');
   });
 
   test('2.4 JSON array as the request body is valid JSON but destructures to nothing useful', async ({
@@ -92,15 +73,11 @@ test.describe('2. Error Scenario Handling', () => {
   }) => {
     // 2. POST /api/users with Content-Type: application/json and body = JSON.stringify(['name','email'])
     const response = await request.post(`${GATEWAY_URL}/api/users`, {
-      headers: {
-        'x-api-key': API_KEY,
-        'Content-Type': 'application/json',
-      },
+      headers: AUTH_HEADERS,
       data: JSON.stringify(['name', 'email']),
     });
 
     // expect: Response status 400 with clean JSON {error:'ValidationError', message:'name is required'} (verified live, no 500)
-    expect(response.status()).toBe(400);
-    expect(await response.json()).toEqual({ error: 'ValidationError', message: 'name is required' });
+    await expect(response).toBeValidationError('name is required');
   });
 });

@@ -17,54 +17,34 @@ test.describe('Data Validation Tests', () => {
       headers: AUTH_HEADERS,
       data: { userId: user.id, type: 'deposit' },
     });
-    expect(missingAmountResponse.status()).toBe(400);
-    expect(await missingAmountResponse.json()).toEqual({
-      error: 'ValidationError',
-      message: 'amount must be a positive number',
-    });
+    await expect(missingAmountResponse).toBeValidationError('amount must be a positive number');
 
     // 2. POST /api/transactions with amount=null
     const nullAmountResponse = await request.post(`${GATEWAY_URL}/api/transactions`, {
       headers: AUTH_HEADERS,
       data: { userId: user.id, amount: null, type: 'deposit' } as any,
     });
-    expect(nullAmountResponse.status()).toBe(400);
-    expect(await nullAmountResponse.json()).toEqual({
-      error: 'ValidationError',
-      message: 'amount must be a positive number',
-    });
+    await expect(nullAmountResponse).toBeValidationError('amount must be a positive number');
 
     // 3. POST /api/transactions with amount='100' (numeric string, not a JS number)
     const stringAmountResponse = await request.post(`${GATEWAY_URL}/api/transactions`, {
       headers: AUTH_HEADERS,
       data: { userId: user.id, amount: '100', type: 'deposit' } as any,
     });
-    expect(stringAmountResponse.status()).toBe(400);
-    expect(await stringAmountResponse.json()).toEqual({
-      error: 'ValidationError',
-      message: 'amount must be a positive number',
-    });
+    await expect(stringAmountResponse).toBeValidationError('amount must be a positive number');
 
     // 4. POST /api/transactions with amount=0 and amount=-50
     const zeroAmountResponse = await request.post(`${GATEWAY_URL}/api/transactions`, {
       headers: AUTH_HEADERS,
       data: { userId: user.id, amount: 0, type: 'deposit' },
     });
-    expect(zeroAmountResponse.status()).toBe(400);
-    expect(await zeroAmountResponse.json()).toEqual({
-      error: 'ValidationError',
-      message: 'amount must be a positive number',
-    });
+    await expect(zeroAmountResponse).toBeValidationError('amount must be a positive number');
 
     const negativeAmountResponse = await request.post(`${GATEWAY_URL}/api/transactions`, {
       headers: AUTH_HEADERS,
       data: { userId: user.id, amount: -50, type: 'deposit' },
     });
-    expect(negativeAmountResponse.status()).toBe(400);
-    expect(await negativeAmountResponse.json()).toEqual({
-      error: 'ValidationError',
-      message: 'amount must be a positive number',
-    });
+    await expect(negativeAmountResponse).toBeValidationError('amount must be a positive number');
 
     // 5. POST /api/transactions with amount that overflows to Infinity (e.g. 1e400 as a JSON number literal).
     // Sent as a raw JSON string body (rather than a JS object) because JSON.stringify would otherwise collapse
@@ -74,11 +54,7 @@ test.describe('Data Validation Tests', () => {
       headers: AUTH_HEADERS,
       data: overflowBody,
     });
-    expect(overflowResponse.status()).toBe(400);
-    expect(await overflowResponse.json()).toEqual({
-      error: 'ValidationError',
-      message: 'amount must be a positive number',
-    });
+    await expect(overflowResponse).toBeValidationError('amount must be a positive number');
 
     // 6. POST /api/transactions with amount=5000 for a basic-account user, then amount=5000.01 for the same user
     const atLimitResponse = await request.post(`${GATEWAY_URL}/api/transactions`, {
@@ -116,42 +92,26 @@ test.describe('Data Validation Tests', () => {
       headers: AUTH_HEADERS,
       data: { amount: 100, type: 'deposit' },
     });
-    expect(missingUserIdResponse.status()).toBe(400);
-    expect(await missingUserIdResponse.json()).toEqual({
-      error: 'ValidationError',
-      message: 'userId is required',
-    });
+    await expect(missingUserIdResponse).toBeValidationError('userId is required');
 
     const emptyUserIdResponse = await request.post(`${GATEWAY_URL}/api/transactions`, {
       headers: AUTH_HEADERS,
       data: { userId: '', amount: 100, type: 'deposit' },
     });
-    expect(emptyUserIdResponse.status()).toBe(400);
-    expect(await emptyUserIdResponse.json()).toEqual({
-      error: 'ValidationError',
-      message: 'userId is required',
-    });
+    await expect(emptyUserIdResponse).toBeValidationError('userId is required');
 
     const whitespaceUserIdResponse = await request.post(`${GATEWAY_URL}/api/transactions`, {
       headers: AUTH_HEADERS,
       data: { userId: '   ', amount: 100, type: 'deposit' },
     });
-    expect(whitespaceUserIdResponse.status()).toBe(400);
-    expect(await whitespaceUserIdResponse.json()).toEqual({
-      error: 'ValidationError',
-      message: 'userId is required',
-    });
+    await expect(whitespaceUserIdResponse).toBeValidationError('userId is required');
 
     // 2. POST /api/transactions with userId=12345 (a JSON number instead of a string)
     const numericUserIdResponse = await request.post(`${GATEWAY_URL}/api/transactions`, {
       headers: AUTH_HEADERS,
       data: { userId: 12345, amount: 100, type: 'deposit' } as any,
     });
-    expect(numericUserIdResponse.status()).toBe(400);
-    expect(await numericUserIdResponse.json()).toEqual({
-      error: 'ValidationError',
-      message: 'userId is required',
-    });
+    await expect(numericUserIdResponse).toBeValidationError('userId is required');
   });
 
   test('3.10 Transaction type allow-list enforcement', async ({ request }) => {
@@ -162,21 +122,13 @@ test.describe('Data Validation Tests', () => {
       headers: AUTH_HEADERS,
       data: { userId: user.id, amount: 50 },
     });
-    expect(missingTypeResponse.status()).toBe(400);
-    expect(await missingTypeResponse.json()).toEqual({
-      error: 'ValidationError',
-      message: 'type must be one of: transfer, deposit, withdrawal',
-    });
+    await expect(missingTypeResponse).toBeValidationError('type must be one of: transfer, deposit, withdrawal');
 
     const bogusTypeResponse = await request.post(`${GATEWAY_URL}/api/transactions`, {
       headers: AUTH_HEADERS,
       data: { userId: user.id, amount: 50, type: 'bogus' },
     });
-    expect(bogusTypeResponse.status()).toBe(400);
-    expect(await bogusTypeResponse.json()).toEqual({
-      error: 'ValidationError',
-      message: 'type must be one of: transfer, deposit, withdrawal',
-    });
+    await expect(bogusTypeResponse).toBeValidationError('type must be one of: transfer, deposit, withdrawal');
   });
 
   test('3.11 Transfer-specific recipientId validation', async ({ request }) => {
@@ -187,22 +139,14 @@ test.describe('Data Validation Tests', () => {
       headers: AUTH_HEADERS,
       data: { userId: user.id, amount: 50, type: 'transfer' },
     });
-    expect(missingRecipientResponse.status()).toBe(400);
-    expect(await missingRecipientResponse.json()).toEqual({
-      error: 'ValidationError',
-      message: 'recipientId is required for transfers',
-    });
+    await expect(missingRecipientResponse).toBeValidationError('recipientId is required for transfers');
 
     // 2. POST /api/transactions with type='transfer' and recipientId='   ' (whitespace only)
     const whitespaceRecipientResponse = await request.post(`${GATEWAY_URL}/api/transactions`, {
       headers: AUTH_HEADERS,
       data: { userId: user.id, amount: 50, type: 'transfer', recipientId: '   ' },
     });
-    expect(whitespaceRecipientResponse.status()).toBe(400);
-    expect(await whitespaceRecipientResponse.json()).toEqual({
-      error: 'ValidationError',
-      message: 'recipientId is required for transfers',
-    });
+    await expect(whitespaceRecipientResponse).toBeValidationError('recipientId is required for transfers');
 
     // 3. POST /api/transactions with type='deposit' (non-transfer) and recipientId omitted
     const depositResponse = await request.post(`${GATEWAY_URL}/api/transactions`, {

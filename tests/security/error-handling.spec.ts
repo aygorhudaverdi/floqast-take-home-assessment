@@ -2,6 +2,8 @@
 // seed: tests/seed.spec.ts
 
 import { test, expect } from '../fixtures';
+import { GATEWAY_URL } from '../support/env';
+import { uniqueEmail } from '../support/factories';
 
 test.describe('Cross-Cutting: Authorization, Routing, and Error Handling', () => {
   test('Downstream service unreachable during transaction creation', async ({ page, registerPage, transactionPage }) => {
@@ -9,7 +11,7 @@ test.describe('Cross-Cutting: Authorization, Routing, and Error Handling', () =>
     await registerPage.goto();
     await registerPage.register({
       name: 'Downstream Failure User',
-      email: `downstream-failure-${Date.now()}@example.com`,
+      email: uniqueEmail('downstream-failure'),
       accountType: 'basic',
     });
     const userId = await registerPage.getCreatedUserId();
@@ -17,7 +19,7 @@ test.describe('Cross-Cutting: Authorization, Routing, and Error Handling', () =>
     await transactionPage.goto();
 
     // 1. Use Playwright route interception to make the gateway's transaction-creation call respond with HTTP 502 and body {error: 'UpstreamError', message: 'unable to reach user-service'}, then submit a transaction from the UI
-    await page.route('http://localhost:4000/api/transactions', async (route) => {
+    await page.route(`${GATEWAY_URL}/api/transactions`, async (route) => {
       await route.fulfill({
         status: 502,
         contentType: 'application/json',
@@ -39,7 +41,7 @@ test.describe('Cross-Cutting: Authorization, Routing, and Error Handling', () =>
 
   test('Malformed/non-JSON error response from the API is handled gracefully', async ({ page, registerPage }) => {
     // 1. Intercept a POST to /api/users or /api/transactions and fulfill it with a non-2xx status and a non-JSON body (e.g. plain text or empty body)
-    await page.route('http://localhost:4000/api/users', async (route) => {
+    await page.route(`${GATEWAY_URL}/api/users`, async (route) => {
       await route.fulfill({
         status: 500,
         contentType: 'text/plain',
@@ -50,7 +52,7 @@ test.describe('Cross-Cutting: Authorization, Routing, and Error Handling', () =>
     await registerPage.goto();
     await registerPage.register({
       name: 'Malformed Response User',
-      email: `malformed-response-${Date.now()}@example.com`,
+      email: uniqueEmail('malformed-response'),
       accountType: 'basic',
     });
 
@@ -67,14 +69,14 @@ test.describe('Cross-Cutting: Authorization, Routing, and Error Handling', () =>
     page.on('pageerror', (error) => pageErrors.push(error));
 
     // 1. Intercept the relevant API call and abort it (simulating a dropped connection / DNS failure) instead of returning any response, then submit the registration or transaction form
-    await page.route('http://localhost:4000/api/users', async (route) => {
+    await page.route(`${GATEWAY_URL}/api/users`, async (route) => {
       await route.abort('connectionrefused');
     });
 
     await registerPage.goto();
     await registerPage.register({
       name: 'Network Failure User',
-      email: `network-failure-${Date.now()}@example.com`,
+      email: uniqueEmail('network-failure'),
       accountType: 'basic',
     });
 
@@ -93,7 +95,7 @@ test.describe('Cross-Cutting: Authorization, Routing, and Error Handling', () =>
     await registerPage.goto();
     await registerPage.register({
       name: 'Slow Response User',
-      email: `slow-response-${Date.now()}@example.com`,
+      email: uniqueEmail('slow-response'),
       accountType: 'basic',
     });
     const userId = await registerPage.getCreatedUserId();
@@ -101,7 +103,7 @@ test.describe('Cross-Cutting: Authorization, Routing, and Error Handling', () =>
     await transactionPage.goto();
 
     // 1. Intercept the relevant API call and delay the response by several seconds before fulfilling it normally, observing the UI state during the delay
-    await page.route('http://localhost:4000/api/transactions', async (route) => {
+    await page.route(`${GATEWAY_URL}/api/transactions`, async (route) => {
       await new Promise((resolve) => setTimeout(resolve, 3000));
       await route.fulfill({
         status: 201,
@@ -143,7 +145,7 @@ test.describe('Cross-Cutting: Authorization, Routing, and Error Handling', () =>
   }) => {
     let registerRequestCount = 0;
     page.on('request', (req) => {
-      if (req.url() === 'http://localhost:4000/api/users' && req.method() === 'POST') {
+      if (req.url() === `${GATEWAY_URL}/api/users` && req.method() === 'POST') {
         registerRequestCount += 1;
       }
     });
@@ -153,7 +155,7 @@ test.describe('Cross-Cutting: Authorization, Routing, and Error Handling', () =>
     await registerPage.goto();
     await registerPage.register({
       name: 'Back Navigation User',
-      email: `back-navigation-${Date.now()}@example.com`,
+      email: uniqueEmail('back-navigation'),
       accountType: 'basic',
     });
     await expect(registerPage.messageBanner).toHaveText('User created successfully.');

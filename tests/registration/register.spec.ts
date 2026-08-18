@@ -2,13 +2,7 @@
 // seed: tests/seed.spec.ts
 
 import { test, expect } from '../fixtures';
-
-/** Generates a unique email per run so duplicate-email scenarios never collide across runs. */
-function uniqueEmail(prefix: string): string {
-  const stamp = Date.now();
-  const rand = Math.random().toString(36).slice(2, 8);
-  return `${prefix}.${stamp}.${rand}@example.com`;
-}
+import { uniqueEmail } from '../support/factories';
 
 const UUID_RESULT_PATTERN =
   /^ID: [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

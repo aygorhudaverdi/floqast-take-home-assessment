@@ -17,33 +17,21 @@ test.describe('Data Validation Tests', () => {
       headers: AUTH_HEADERS,
       data: { message: 'A notification message' },
     });
-    expect(missingUserIdResponse.status()).toBe(400);
-    expect(await missingUserIdResponse.json()).toEqual({
-      error: 'ValidationError',
-      message: 'userId is required',
-    });
+    await expect(missingUserIdResponse).toBeValidationError('userId is required');
 
     // 2. POST /api/notifications with message omitted (userId present)
     const missingMessageResponse = await request.post(`${GATEWAY_URL}/api/notifications`, {
       headers: AUTH_HEADERS,
       data: { userId: user.id },
     });
-    expect(missingMessageResponse.status()).toBe(400);
-    expect(await missingMessageResponse.json()).toEqual({
-      error: 'ValidationError',
-      message: 'message is required',
-    });
+    await expect(missingMessageResponse).toBeValidationError('message is required');
 
     // 3. POST /api/notifications with message='   ' (whitespace only)
     const whitespaceMessageResponse = await request.post(`${GATEWAY_URL}/api/notifications`, {
       headers: AUTH_HEADERS,
       data: { userId: user.id, message: '   ' },
     });
-    expect(whitespaceMessageResponse.status()).toBe(400);
-    expect(await whitespaceMessageResponse.json()).toEqual({
-      error: 'ValidationError',
-      message: 'message is required',
-    });
+    await expect(whitespaceMessageResponse).toBeValidationError('message is required');
 
     // 4. POST /api/notifications with a valid userId and message, transactionId omitted entirely
     const validResponse = await request.post(`${GATEWAY_URL}/api/notifications`, {

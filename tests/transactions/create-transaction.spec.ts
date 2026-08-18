@@ -2,6 +2,8 @@
 // seed: tests/seed.spec.ts
 
 import { test, expect } from "../fixtures";
+import { GATEWAY_URL } from '../support/env';
+import { uniqueEmail } from "../support/factories";
 import type { RegisterPage } from "../../pages/RegisterPage";
 import type { AccountType } from "../../pages/RegisterPage";
 
@@ -10,14 +12,6 @@ const TRANSACTION_SUCCESS_REGEX =
 
 const BASIC_LIMIT_ERROR =
   "basic accounts are limited to $5000 per transaction; upgrade to premium for higher limits";
-
-let uniqueSeq = 0;
-
-function uniqueEmail(prefix: string): string {
-  uniqueSeq += 1;
-  const stamp = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}${uniqueSeq}`;
-  return `${prefix}.${stamp}@example.com`;
-}
 
 /** Registers a brand-new user via the real registration form and returns the created user's ID. */
 async function registerFreshUser(
@@ -354,7 +348,7 @@ test.describe("Transaction Creation (transaction.html — create form)", () => {
     // userId/amount (the UI's Type dropdown can only ever submit transfer/deposit/withdrawal, so a tampered
     // value must be sent as a raw API call to exercise the server-side allow-list).
     const userId = await registerFreshUser(registerPage, "basic", "bogus-type");
-    const response = await request.post("http://localhost:4000/api/transactions", {
+    const response = await request.post(`${GATEWAY_URL}/api/transactions`, {
       headers: { "x-api-key": "dev-secret-key", "Content-Type": "application/json" },
       data: { userId, amount: 50, type: "bogus" },
     });

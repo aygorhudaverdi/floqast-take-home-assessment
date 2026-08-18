@@ -1,10 +1,7 @@
 // spec: specs/api-test-plan.md
 // seed: tests/seed.spec.ts
 
-import { test, expect } from '../../fixtures';
-
-const GATEWAY_URL = 'http://localhost:4000';
-const API_KEY = 'dev-secret-key';
+import { test, expect, GATEWAY_URL, AUTH_HEADERS } from '../helpers';
 
 test.describe('2. Error Scenario Handling', () => {
   test('2.5 Wrong HTTP method on a collection route returns a downstream 404, not a 405', async ({
@@ -12,7 +9,7 @@ test.describe('2. Error Scenario Handling', () => {
   }) => {
     // 2. Issue GET /api/users (collection root, no id — no route registered for this) with valid auth
     const getUsersCollection = await request.get(`${GATEWAY_URL}/api/users`, {
-      headers: { 'x-api-key': API_KEY },
+      headers: AUTH_HEADERS,
     });
 
     // expect: Returns 404 with an HTML 'Cannot GET /users' body (verified live)
@@ -22,7 +19,7 @@ test.describe('2. Error Scenario Handling', () => {
 
     // 2 (cont'd). DELETE /api/transactions (no route registered) with valid auth
     const deleteTransactionsCollection = await request.delete(`${GATEWAY_URL}/api/transactions`, {
-      headers: { 'x-api-key': API_KEY },
+      headers: AUTH_HEADERS,
     });
 
     // expect: Returns 404 with an HTML 'Cannot DELETE <path>' body
@@ -34,7 +31,7 @@ test.describe('2. Error Scenario Handling', () => {
   test('2.6 GET /api/users/ (trailing slash, empty id segment) 404s cleanly', async ({ request }) => {
     // 2. GET /api/users/ with valid auth
     const response = await request.get(`${GATEWAY_URL}/api/users/`, {
-      headers: { 'x-api-key': API_KEY },
+      headers: AUTH_HEADERS,
     });
 
     // expect: Response status 404 with HTML body 'Cannot GET /users/' (verified live)

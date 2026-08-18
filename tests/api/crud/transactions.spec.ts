@@ -91,7 +91,6 @@ test.describe('1. CRUD Operations Testing', () => {
       `${GATEWAY_URL}/api/transactions/00000000-0000-0000-0000-000000000099`,
       { headers: AUTH_HEADERS }
     );
-    expect(response.status()).toBe(404);
-    expect(await response.json()).toEqual({ error: 'NotFound', message: 'user not found' });
+    await expect(response).toBeNotFoundError('user not found');
   });
 });

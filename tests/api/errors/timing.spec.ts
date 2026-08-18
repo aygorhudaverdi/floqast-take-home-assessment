@@ -1,45 +1,22 @@
 // spec: specs/api-test-plan.md
 // seed: tests/seed.spec.ts
 
-import { test, expect } from '../../fixtures';
-
-const GATEWAY_URL = 'http://localhost:4000';
-const API_KEY = 'dev-secret-key';
+import { test, expect, GATEWAY_URL, AUTH_HEADERS, createUser, createTransaction } from '../helpers';
 
 test.describe('2. Error Scenario Handling', () => {
   test('2.12 Race condition — a notification created by a transaction may not be immediately visible via GET', async ({
     request,
   }) => {
     // 1. Create a user
-    const uniqueEmail = `timing-race-${Date.now()}@example.com`;
-    const createUserResponse = await request.post(`${GATEWAY_URL}/api/users`, {
-      headers: {
-        'x-api-key': API_KEY,
-        'Content-Type': 'application/json',
-      },
-      data: {
-        name: 'Timing Race User',
-        email: uniqueEmail,
-        accountType: 'basic',
-      },
-    });
+    const { response: createUserResponse, body: user } = await createUser(request, { name: 'Timing Race User' });
     expect(createUserResponse.status()).toBe(201);
-    const user = await createUserResponse.json();
 
     // 2. POST a transaction
-    const createTransactionResponse = await request.post(`${GATEWAY_URL}/api/transactions`, {
-      headers: {
-        'x-api-key': API_KEY,
-        'Content-Type': 'application/json',
-      },
-      data: {
-        userId: user.id,
-        amount: 250,
-        type: 'deposit',
-      },
+    const { response: createTransactionResponse, body: transaction } = await createTransaction(request, user.id, {
+      amount: 250,
+      type: 'deposit',
     });
     expect(createTransactionResponse.status()).toBe(201);
-    const transaction = await createTransactionResponse.json();
 
     // 3. Immediately (no wait) GET /api/notifications/:userId
     // expect: Document actual behavior — the immediate GET may or may not include the new
@@ -47,7 +24,7 @@ test.describe('2. Error Scenario Handling', () => {
     // and not awaited before the transaction response returns. Deliberately not asserted either
     // way here to avoid a flaky test.
     const immediateResponse = await request.get(`${GATEWAY_URL}/api/notifications/${user.id}`, {
-      headers: { 'x-api-key': API_KEY },
+      headers: AUTH_HEADERS,
     });
     expect(immediateResponse.status()).toBe(200);
     const immediateNotifications = await immediateResponse.json();
@@ -63,7 +40,7 @@ test.describe('2. Error Scenario Handling', () => {
       .poll(
         async () => {
           const pollResponse = await request.get(`${GATEWAY_URL}/api/notifications/${user.id}`, {
-            headers: { 'x-api-key': API_KEY },
+            headers: AUTH_HEADERS,
           });
           const notifications = await pollResponse.json();
           return notifications.some((n: { transactionId: string }) => n.transactionId === transaction.id);
@@ -73,7 +50,7 @@ test.describe('2. Error Scenario Handling', () => {
       .toBe(true);
 
     const finalResponse = await request.get(`${GATEWAY_URL}/api/notifications/${user.id}`, {
-      headers: { 'x-api-key': API_KEY },
+      headers: AUTH_HEADERS,
     });
     const finalNotifications = await finalResponse.json();
     const notification = finalNotifications.find(
