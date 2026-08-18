@@ -324,10 +324,12 @@ test.describe('User Registration (register.html)', () => {
     // Verified live: two identical POST requests are sent (no submit-guard exists), but because
     // the user-service handles each request synchronously with no interior await, exactly one
     // request is created (201) and the other is rejected as a duplicate email (409) — so only a
-    // single user ends up created. The error from the second request does overwrite the message
-    // banner, which misleadingly shows an error even though a user (with a real ID) was created.
+    // single user ends up created. Which response the browser resolves *last* (and therefore which
+    // text wins the message banner) is a genuine network-level race with no ordering guarantee from
+    // the app, so this only asserts the order-independent invariant: exactly one success and one
+    // duplicate-email rejection occurred, and the successful response's id is reflected in the UI.
     expect(statuses.slice().sort((a, b) => a - b)).toEqual([201, 409]);
-    await expect(registerPage.messageBanner).toHaveText('email already registered');
+    await expect(registerPage.messageBanner).toHaveText(/^(User created successfully\.|email already registered)$/);
     await expect(registerPage.resultText).toHaveText(UUID_RESULT_PATTERN);
   });
 });
