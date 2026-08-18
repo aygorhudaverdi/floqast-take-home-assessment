@@ -55,7 +55,21 @@ export class RegisterPage {
     await this.fillName(input.name);
     await this.fillEmail(input.email);
     await this.selectAccountType(input.accountType);
+    // Wait for this specific submission's round trip rather than "message is
+    // non-empty" — the latter passes immediately (and stale) when a prior
+    // register() call already left text in the banner, letting callers race
+    // ahead of the actual response. Race response vs. requestfailed so a
+    // simulated network failure (aborted request, no response ever fires)
+    // doesn't hang the wait.
+    const isUsersPost = (url: string, method: string) => url.endsWith("/api/users") && method === "POST";
+    const outcome = Promise.race([
+      this.page.waitForResponse((res) => isUsersPost(res.url(), res.request().method())),
+      this.page.waitForEvent("requestfailed", {
+        predicate: (req) => isUsersPost(req.url(), req.method()),
+      }),
+    ]);
     await this.submit();
+    await outcome;
   }
 
   async getMessageText(): Promise<string> {

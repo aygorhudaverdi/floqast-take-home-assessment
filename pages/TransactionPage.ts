@@ -1,4 +1,4 @@
-import type { Locator, Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 export type TransactionType = "transfer" | "deposit" | "withdrawal";
 
@@ -86,7 +86,23 @@ export class TransactionPage {
     if (input.recipientId) {
       await this.fillRecipientId(input.recipientId);
     }
+    // Wait for this specific submission's round trip rather than "message is
+    // non-empty" — the latter passes immediately (and stale) when a prior
+    // createTransaction() call already left text in the banner, letting
+    // callers race ahead and overwrite form fields before the in-flight
+    // request's own submit handler has read them. Race response vs.
+    // requestfailed so a simulated network failure (aborted request, no
+    // response ever fires) doesn't hang the wait.
+    const isTransactionsPost = (url: string, method: string) =>
+      url.endsWith("/api/transactions") && method === "POST";
+    const outcome = Promise.race([
+      this.page.waitForResponse((res) => isTransactionsPost(res.url(), res.request().method())),
+      this.page.waitForEvent("requestfailed", {
+        predicate: (req) => isTransactionsPost(req.url(), req.method()),
+      }),
+    ]);
     await this.submit();
+    await outcome;
   }
 
   async getTransactionMessageText(): Promise<string> {
@@ -103,7 +119,17 @@ export class TransactionPage {
   // Actions - transaction history lookup
   async lookupTransactions(userId: string): Promise<void> {
     await this.lookupUserIdInput.fill(userId);
+    if (userId.trim().length === 0) {
+      // App short-circuits client-side for a blank/whitespace-only ID: no request is sent.
+      await this.lookupButton.click();
+      await expect(this.lookupMessage).not.toHaveText("");
+      return;
+    }
+    const responsePromise = this.page.waitForResponse(
+      (res) => res.url().includes("/api/transactions/") && res.request().method() === "GET"
+    );
     await this.lookupButton.click();
+    await responsePromise;
   }
 
   async getLookupMessageText(): Promise<string> {
