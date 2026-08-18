@@ -18,7 +18,10 @@
     "http-proxy-middleware": "^2.0.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^26.2.0",
     "concurrently": "^8.2.2",
-    "serve": "^14.2.3"
+    "serve": "^14.2.3",
+    "typescript": "^7.0.2"
   }
 }
